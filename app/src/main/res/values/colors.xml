@@ -3,4 +3,12 @@
     <color name="colorPrimary">#009680</color>
     <color name="colorPrimaryDark">#00695C</color>
     <color name="colorAccent">#E0F2F1</color>
+
+    <array name="dot_colors">
+
+        <item>#03A9F4</item>
+        <item>#E65100</item>
+        <item>#FFBB00</item>
+
+    </array>
 </resources>

@@ -1,8 +1,11 @@
 package com.example.prochatit;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -25,6 +28,8 @@ public class MainActivity extends AppCompatActivity {
     static final String AUTH_SECRET = "H5cuQhbP2QqJJCN";
     static final String ACCOUNT_KEY = "o-NTfncxHtC1DLs6vsNL";
 
+    static final int REQUEST_CODE = 1000;
+
     Button btnLogin, btnSignUp;
     EditText edtUser, edtPassword;
 
@@ -32,6 +37,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        requestRuntimePermission();
 
         initializeFramework();
 
@@ -75,6 +82,30 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         });
+    }
+
+    private void requestRuntimePermission() {
+        if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+                || checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+            requestPermissions(new String[]{
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+            }, REQUEST_CODE);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode){
+            case REQUEST_CODE:
+            {
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                    Toast.makeText(getBaseContext(), "Permission Granted", Toast.LENGTH_SHORT).show();
+                else
+                    Toast.makeText(getBaseContext(), "Permission Denied", Toast.LENGTH_SHORT).show();
+            }
+            break;
+        }
     }
 
     private void initializeFramework() {

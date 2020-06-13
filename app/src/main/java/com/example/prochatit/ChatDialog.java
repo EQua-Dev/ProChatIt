@@ -1,15 +1,23 @@
 package com.example.prochatit;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ContextMenu;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.example.prochatit.Adapters.ChatDialogAdapter;
 import com.example.prochatit.Common.Common;
@@ -47,20 +55,91 @@ public class ChatDialog extends AppCompatActivity implements QBSystemMessageList
     ListView lstChatDialogs;
 
     @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        getMenuInflater().inflate(R.menu.chat_dialog_context_menu, menu);
+    }
+
+    @Override
+    public boolean onContextItemSelected(@NonNull MenuItem item) {
+
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+
+        switch (item.getItemId()){
+            case R.id.context_delete_dialog:
+                deleteDialog(info.position);
+                break;
+        }
+        return true;
+    }
+
+    private void deleteDialog(int index) {
+        //Call on server to delete dialog at context menu clicked
+
+        final QBChatDialog chatDialog = (QBChatDialog) lstChatDialogs.getAdapter().getItem(index);
+        QBRestChatService.deleteDialog(chatDialog.getDialogId(), false)
+                .performAsync(new QBEntityCallback<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid, Bundle bundle) {
+                        //Delete dialog from cache and refresh ListView
+                        QBChatDialogHolder.getInstance().removeDialog(chatDialog.getDialogId());
+                        ChatDialogAdapter adapter = new ChatDialogAdapter(getBaseContext(),QBChatDialogHolder.getInstance().getAllChatDialogs());
+                        lstChatDialogs.setAdapter(adapter);
+                        adapter.notifyDataSetChanged();
+                    }
+
+                    @Override
+                    public void onError(QBResponseException e) {
+                        Toast.makeText(ChatDialog.this, ""+e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.chat_dialog_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.chat_dialog_menu_user:
+                showUserProfile();
+                break;
+            default:
+                break;
+        }
+        return true;
+    }
+
+    private void showUserProfile() {
+        Intent intent = new Intent(ChatDialog.this, UserProfile.class);
+        startActivity(intent);
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         loadChatDialogs();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat_dialog);
 
+        //Toolbar
+        Toolbar toolbar = findViewById(R.id.chat_dialog_toolbar);
+        toolbar.setTitle("Pro Chat It");
+        setSupportActionBar(toolbar);
+
 
         createSessionChat();
 
         lstChatDialogs = findViewById(R.id.list_chat_dialogs);
+
+        registerForContextMenu(lstChatDialogs);
         lstChatDialogs.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {

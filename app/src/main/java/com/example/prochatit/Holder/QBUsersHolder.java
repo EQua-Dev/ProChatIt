@@ -9,6 +9,8 @@ import com.quickblox.users.model.QBUser;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.measite.minidns.record.A;
+
 
 //class for cache
 public class QBUsersHolder {
@@ -32,7 +34,7 @@ public class QBUsersHolder {
             putUser(user);
     }
 
-    private void putUser(QBUser user) {
+    public void putUser(QBUser user) {
         qbUserSparseArray.put(user.getId(), user);
     }
 
@@ -51,4 +53,11 @@ public class QBUsersHolder {
         return qbUser;
     }
 
+
+    public ArrayList<QBUser> getAllUsers() {
+        ArrayList<QBUser> result = new ArrayList<>();
+        for (int i=0;i<qbUserSparseArray.size();i++)
+            result.add(qbUserSparseArray.valueAt(i));
+        return result;
+    }
 }
